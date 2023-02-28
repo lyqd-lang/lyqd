@@ -1,0 +1,7 @@
+[workspace]
+members = [
+  "lyqdc",
+  "lyqdvm",
+  "lyqdvbc",
+  "flow"
+]

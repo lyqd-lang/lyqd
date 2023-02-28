@@ -1,0 +1,8 @@
+void main() {
+  print "Hello, world!";
+  nint immut_int = 0;
+  mut nint mut_int = 0;
+  mut_int = 5;
+  print immut_int;
+  print mut_int;
+}
