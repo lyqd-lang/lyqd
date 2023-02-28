@@ -1,13 +1,8 @@
-use crate::lexer::{Lex, Lexer};
+use std::fmt::Display;
 
-#[derive(Debug)]
-pub enum Type {
-    Void,
-    IntPtr,
-    // Custom {
-    //
-    // }
-}
+use shared::BCType;
+
+use crate::lexer::{Lex, Lexer};
 
 #[derive(Debug)]
 pub enum ASTNode {
@@ -15,24 +10,25 @@ pub enum ASTNode {
         name: Box<ASTNode>,
         arguments: Vec<ASTNode>,
         statements: Vec<ASTNode>,
-        return_type: Type,
+        return_type: BCType,
     },
     Ident(String),
-    FunctionArgument(Box<ASTNode>, Type),
+    FunctionArgument(Box<ASTNode>, BCType),
     Statement(Statement),
-    Assignment {
-        to: Box<ASTNode>,
-        value: Box<ASTNode>,
-        taipe: Option<Type>,
-        mutuability: bool,
-    },
     Number(isize),
     Root,
 }
 
 #[derive(Debug)]
 pub enum Statement {
-    Print(String),
+    PrintConstant(String),
+    PrintVariable(Box<ASTNode>),
+    Assignment {
+        to: Box<ASTNode>,
+        value: Box<ASTNode>,
+        taipe: Option<BCType>,
+        mutuability: bool,
+    },
     // TODO: FnCall(String)
 }
 
@@ -67,12 +63,12 @@ impl Ast {
         }
     }
 
-    pub fn parse_type(lexer: &mut Lexer) -> Option<Type> {
+    pub fn parse_type(lexer: &mut Lexer) -> Option<BCType> {
         let taipe = lexer.peek();
         let ast_type = match taipe {
-            Some(Lex::Void) => Some(Type::Void),
+            Some(Lex::Void) => Some(BCType::Void),
             Some(Lex::Ident(name)) => match name.as_str() {
-                "nint" => Some(Type::IntPtr),
+                "nint" => Some(BCType::IntPtr),
                 _ => None,
             },
             _ => panic!("unexpected type"),
@@ -127,12 +123,12 @@ impl Ast {
         assert!(matches!(lexer.next(), Some(Lex::Eq)));
         let value = Self::parse_value(lexer);
         assert!(matches!(lexer.next(), Some(Lex::Semi)));
-        ASTNode::Assignment {
+        ASTNode::Statement(Statement::Assignment {
             to: Box::new(ident),
             value: Box::new(value),
             mutuability,
             taipe,
-        }
+        })
     }
 
     fn parse_value(lexer: &mut Lexer) -> ASTNode {
@@ -145,11 +141,18 @@ impl Ast {
     fn parse_print_statement(lexer: &mut Lexer) -> ASTNode {
         lexer.next(); // we know there's a print kw because of how parse_statement does shit
         let text_token = lexer.next();
-        let text = match text_token {
-            Some(Lex::StringLiteral(text)) => text,
+        let statement = match text_token {
+            Some(Lex::StringLiteral(text)) => Statement::PrintConstant(text),
+            Some(Lex::Ident(name)) => Statement::PrintVariable(Box::new(ASTNode::Ident(name))),
             _ => panic!("unexpected token"),
         };
         assert!(lexer.next() == Some(Lex::Semi));
-        ASTNode::Statement(Statement::Print(text))
+        ASTNode::Statement(statement)
     }
 }
+
+// impl Display for Ast {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+
+//     }
+// }

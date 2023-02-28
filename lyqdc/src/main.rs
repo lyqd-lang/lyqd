@@ -28,50 +28,6 @@ fn main() {
     println!("{:?}", _lex.collect::<Vec<_>>());
     let ast = crate::ast::Ast::build(&mut lex);
 
-    // print some debug info
-    println!();
-    println!();
-    for i in 0..ast.functions.len() {
-        let func = &ast.functions[i];
-        // get data
-        let (name, statements) = match func {
-            ASTNode::Function {
-                name,
-                arguments: _,
-                statements,
-                return_type: _,
-            } => (
-                match &**name {
-                    // this is not fucked at all
-                    ASTNode::Ident(name) => name,
-                    _ => panic!("bad function name"),
-                },
-                statements,
-            ),
-            _ => panic!("bad function node"),
-        };
-        println!("Function: {name}");
-        for statement in statements {
-            match statement {
-                ASTNode::Statement(statement) => match statement {
-                    Statement::Print(print_data) => println!("print: {print_data}"),
-                },
-                ASTNode::Assignment {
-                    to,
-                    value,
-                    taipe,
-                    mutuability,
-                } => {
-                    println!(
-                        "assigment to {:?}, {:?}, of type: {:?}, mutuable: {:?}",
-                        **to, **value, taipe, mutuability
-                    );
-                }
-                _ => panic!("bad statement"),
-            }
-        }
-        println!();
-    }
     // compile to bytecode
     let bytecode = Compiler::from(ast);
     let mut out_file = args.file;
